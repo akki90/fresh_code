@@ -28,6 +28,7 @@ jobs:
         run: npm test -- --coverage
         env:
           CI: true
+        continue-on-error: true
       
       - name: Upload the Test Coverage Results
         uses: actions/upload-artifact@v1
