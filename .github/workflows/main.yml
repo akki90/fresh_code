@@ -12,6 +12,7 @@ jobs:
 
       - name: Run the Test Case
         run: npm test
+        continue-on-error: true
 
   code-coverage:
     runs-on: ubuntu-latest
