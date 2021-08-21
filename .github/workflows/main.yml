@@ -1,66 +1,71 @@
-name: Devsecops workflow for my Fresh Code
+name: MobileMoney Build and Deployment Workflow
 on: [push]
 jobs:
-
   unit-testing:
     runs-on: ubuntu-latest
     steps:
-      - name: Clone the repository
+      - name: Checkout the Code
         uses: actions/checkout@v2
-      - name: Install npm
-        run: npm install
-      - name: run Npm test
-        run: npm test
-
-  oast-retire:
-    runs-on: ubuntu-latest
-    needs: unit-testing
-    steps:
-      - name: Clone the Repository
-        uses: actions/checkout@v2
-
-      - name: Install Retire.JS
-        run: npm install -g retire
 
       - name: Install Node Modules
         run: npm install
 
-      - name: run Retire.JS Scan
-        run: | 
-          retire --outputformat json --outputpath retire-output.json
-        continue-on-error: true
+      - name: Run the Test Case
+        run: npm test
 
-      - name: Upload the Retire.JS Output file
-        uses: actions/upload-artifact@v2
-        with:
-          name: RetireJS-Output-File
-          path: retire-output.json
-        if: always()
-
-  oast-npm-audit:
+  code-coverage:
     runs-on: ubuntu-latest
-    needs: oast-retire
+    needs: unit-testing
     steps:
-      - name: Clone the repository
+      - name: Checkout the Code
         uses: actions/checkout@v2
 
-      - name: Run npm audit
-        run: 
-          npm audit --json | tee npm-output.json
-        continue-on-error: true
+      - name: Install Node Modules
+        run: npm install
 
-      - name: upload the report
+      - name: Run the code Coverage
+        run: npm test -- --coverage
+        env:
+          CI: true
+      
+      - name: Upload the Test Coverage Results
+        uses: actions/upload-artifact@v1
+        with:
+          name: code-coverage-files
+          path: coverage    
+
+  build:
+    runs-on: ubuntu-latest
+    needs: code-coverage
+    steps:
+      - name: Checkout the Code
+        uses: actions/checkout@v2
+
+      - name: Install Node Modules
+        run: npm install
+
+      - name: Run the Build
+        run: npm run build 
+      
+      - name: Upload the Test Coverage Results
         uses: actions/upload-artifact@v2
         with:
-          name: npm audit Report
-          path: npm-output.json
-          if: always()
+          name: build-files
+          path: build
+        if: always()       
 
-  #build:
-  #functional-testing:
+
+  functonaltesting:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Functional Testing
+        run: echo "Functional Testing"
+
+
   deployment:
     runs-on: ubuntu-latest
-    #needs: functonaltesting
+    needs: functonaltesting
     steps:
       - name: Checkout the Code
         uses: actions/checkout@v2
